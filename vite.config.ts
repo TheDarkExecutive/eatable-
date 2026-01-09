@@ -1,19 +1,19 @@
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Specifically define process.env.API_KEY for the GenAI SDK
+    // Vite shims for process.env
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY),
-    // Provide a fallback for process.env to prevent "process is not defined" errors
-    'process.env': {}
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
   },
   server: {
     port: 3000
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: false
   }
 });
