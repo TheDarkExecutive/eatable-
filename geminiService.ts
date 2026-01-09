@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { VideoRecommendation, Genre, Duration } from "./types";
 
@@ -6,7 +7,7 @@ export const getRecommendations = async (
   duration: Duration,
   eatingWhat: string
 ): Promise<VideoRecommendation[]> => {
-  // Initialize right before use to ensure the latest API key from environment is used
+  // Use process.env.API_KEY directly when initializing the GoogleGenAI client instance.
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   const prompt = `Find 5 high-quality, non-AI-generated, trending videos across the internet (YouTube, Vimeo, Nebula, etc.) that are perfect for someone eating ${eatingWhat}. 
@@ -24,11 +25,17 @@ export const getRecommendations = async (
       },
     });
 
+    // Extract grounding chunks from the response metadata.
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
 
     const items: VideoRecommendation[] = (groundingChunks || []).map((chunk: any, index: number) => {
       const title = chunk.web?.title || `Premium ${genre} Content #${index + 1}`;
       const url = chunk.web?.uri || "https://youtube.com";
+      
+      let source = "Premium Content";
+      try {
+        source = new URL(url).hostname.replace('www.', '');
+      } catch (e) {}
       
       return {
         id: Math.random().toString(36).substr(2, 9),
@@ -39,7 +46,7 @@ export const getRecommendations = async (
         genre: genre,
         description: `Hand-picked high-quality video for your ${genre} appetite.`,
         rating: 4.5 + Math.random() * 0.5,
-        source: new URL(url).hostname.replace('www.', '')
+        source
       };
     });
 
