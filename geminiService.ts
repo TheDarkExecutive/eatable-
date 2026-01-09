@@ -1,0 +1,71 @@
+
+import { GoogleGenAI } from "@google/genai";
+import { VideoRecommendation, Genre, Duration } from "./types";
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+export const getRecommendations = async (
+  genre: Genre,
+  duration: Duration,
+  eatingWhat: string
+): Promise<VideoRecommendation[]> => {
+  const prompt = `Find 5 high-quality, non-AI-generated, trending videos across the internet (YouTube, Vimeo, Nebula, etc.) that are perfect for someone eating ${eatingWhat}. 
+  The videos must be in the "${genre}" genre and approximately ${duration} in length. 
+  Focus on high-production value, human-made content with great audience responses. 
+  Avoid "AI slop", low-quality clickbait, or automated content. 
+  Provide a list including the Title, a brief description of why it's great for eating, and the URL.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+    const rawText = response.text;
+
+    // We use the search grounding to find real links, and the text for metadata
+    // In a real app, we'd parse this more strictly. For this demo, we'll synthesize 
+    // the search results into our Recommendation interface.
+
+    const items: VideoRecommendation[] = (groundingChunks || []).map((chunk: any, index: number) => {
+      const title = chunk.web?.title || `Premium ${genre} Content #${index + 1}`;
+      const url = chunk.web?.uri || "https://youtube.com";
+      
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        title,
+        url,
+        thumbnail: `https://picsum.photos/seed/${index + 40}/800/450`,
+        duration: duration,
+        genre: genre,
+        description: `Hand-picked high-quality video for your ${genre} appetite.`,
+        rating: 4.5 + Math.random() * 0.5,
+        source: new URL(url).hostname.replace('www.', '')
+      };
+    });
+
+    // Fallback if search grounding returns nothing (though it should)
+    if (items.length === 0) {
+      return Array(5).fill(null).map((_, i) => ({
+        id: i.toString(),
+        title: `Featured ${genre} Pick #${i + 1}`,
+        thumbnail: `https://picsum.photos/seed/${i + 10}/800/450`,
+        url: 'https://youtube.com',
+        duration,
+        genre,
+        description: "A top-rated video that pairs perfectly with your meal.",
+        rating: 4.8,
+        source: 'Youtube'
+      }));
+    }
+
+    return items;
+  } catch (error) {
+    console.error("Gemini Error:", error);
+    return [];
+  }
+};

@@ -1,0 +1,7 @@
+{
+  "name": "Eatable - Cinematic Mealtime",
+  "description": "High-end video recommendation platform for quality content during meals.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
