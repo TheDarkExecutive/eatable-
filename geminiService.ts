@@ -1,14 +1,14 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { VideoRecommendation, Genre, Duration } from "./types";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
 export const getRecommendations = async (
   genre: Genre,
   duration: Duration,
   eatingWhat: string
 ): Promise<VideoRecommendation[]> => {
+  // Initialize right before use to ensure the latest API key from environment is used
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   const prompt = `Find 5 high-quality, non-AI-generated, trending videos across the internet (YouTube, Vimeo, Nebula, etc.) that are perfect for someone eating ${eatingWhat}. 
   The videos must be in the "${genre}" genre and approximately ${duration} in length. 
   Focus on high-production value, human-made content with great audience responses. 
@@ -25,11 +25,6 @@ export const getRecommendations = async (
     });
 
     const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-    const rawText = response.text;
-
-    // We use the search grounding to find real links, and the text for metadata
-    // In a real app, we'd parse this more strictly. For this demo, we'll synthesize 
-    // the search results into our Recommendation interface.
 
     const items: VideoRecommendation[] = (groundingChunks || []).map((chunk: any, index: number) => {
       const title = chunk.web?.title || `Premium ${genre} Content #${index + 1}`;
@@ -48,7 +43,7 @@ export const getRecommendations = async (
       };
     });
 
-    // Fallback if search grounding returns nothing (though it should)
+    // Fallback if search grounding returns nothing
     if (items.length === 0) {
       return Array(5).fill(null).map((_, i) => ({
         id: i.toString(),
