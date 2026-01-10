@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Genre, Duration, VideoRecommendation } from '../types';
 import { getRecommendations } from '../geminiService';
@@ -15,7 +14,10 @@ const MunchTool: React.FC<MunchToolProps> = ({ setRecommendations, setIsLoading 
 
   const handleMunch = async () => {
     setIsLoading(true);
-    document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+    const resultsElement = document.getElementById('results');
+    if (resultsElement) {
+      resultsElement.scrollIntoView({ behavior: 'smooth' });
+    }
     
     const recs = await getRecommendations(genre, duration, meal || "a high-end meal");
     setRecommendations(recs);
@@ -23,83 +25,85 @@ const MunchTool: React.FC<MunchToolProps> = ({ setRecommendations, setIsLoading 
   };
 
   return (
-    <div id="munch-tool" className="bg-[#111111]/80 backdrop-blur-3xl rounded-[2.5rem] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-white/5 relative group">
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-600/10 blur-[80px] rounded-full pointer-events-none group-hover:bg-red-600/20 transition-all duration-700"></div>
+    <div id="munch-tool" className="glass rounded-[2rem] p-6 lg:p-10 shadow-2xl relative group overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-red-600/50 to-transparent"></div>
+      <div className="absolute -top-10 -right-10 w-40 h-40 bg-red-600/5 blur-[80px] rounded-full pointer-events-none group-hover:bg-red-600/10 transition-all duration-700"></div>
       
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-10">
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-red-500 font-bold text-xs italic">01</div>
-             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">What's for dinner?</label>
+      <div className="relative z-10 space-y-8">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-end gap-6 lg:gap-8">
+          
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center space-x-2">
+               <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">01. Meal</span>
+            </div>
+            <input 
+              type="text" 
+              placeholder="What are you eating? (e.g. Sushi)"
+              value={meal}
+              onChange={(e) => setMeal(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl p-4 lg:p-5 focus:border-red-600/50 outline-none transition-all placeholder:text-zinc-600 font-bold text-sm lg:text-base"
+            />
           </div>
-          <input 
-            type="text" 
-            placeholder="Steak, Tacos, Salad..."
-            value={meal}
-            onChange={(e) => setMeal(e.target.value)}
-            className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 focus:ring-2 focus:ring-red-600/50 outline-none transition-all placeholder:text-zinc-600 font-bold text-lg"
-          />
-        </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-red-500 font-bold text-xs italic">02</div>
-             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Mood / Genre</label>
-          </div>
-          <div className="relative">
-            <select 
-              value={genre}
-              onChange={(e) => setGenre(e.target.value as Genre)}
-              className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 focus:ring-2 focus:ring-red-600/50 outline-none transition-all appearance-none font-bold text-lg cursor-pointer"
-            >
-              {Object.values(Genre).map(g => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-              </svg>
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center space-x-2">
+               <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">02. Genre</span>
+            </div>
+            <div className="relative">
+              <select 
+                value={genre}
+                onChange={(e) => setGenre(e.target.value as Genre)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 lg:p-5 focus:border-red-600/50 outline-none transition-all appearance-none font-bold text-sm lg:text-base cursor-pointer"
+              >
+                {Object.values(Genre).map(g => (
+                  <option key={g} value={g} className="bg-zinc-900">{g}</option>
+                ))}
+              </select>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="space-y-4">
-          <div className="flex items-center space-x-3">
-             <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-red-500 font-bold text-xs italic">03</div>
-             <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Duration</label>
-          </div>
-          <div className="relative">
-            <select 
-              value={duration}
-              onChange={(e) => setDuration(e.target.value as Duration)}
-              className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl p-5 focus:ring-2 focus:ring-red-600/50 outline-none transition-all appearance-none font-bold text-lg cursor-pointer"
-            >
-              {Object.values(Duration).map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-600">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-              </svg>
+          <div className="flex-1 space-y-3">
+            <div className="flex items-center space-x-2">
+               <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.3em]">03. Time</span>
+            </div>
+            <div className="relative">
+              <select 
+                value={duration}
+                onChange={(e) => setDuration(e.target.value as Duration)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-4 lg:p-5 focus:border-red-600/50 outline-none transition-all appearance-none font-bold text-sm lg:text-base cursor-pointer"
+              >
+                {Object.values(Duration).map(d => (
+                  <option key={d} value={d} className="bg-zinc-900">{d}</option>
+                ))}
+              </select>
+              <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-zinc-800/50 pt-10">
-        <div className="flex items-center space-x-3 bg-zinc-900/80 px-4 py-2 rounded-full border border-zinc-800">
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-          <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Authenticity Engine Active</span>
+          <button 
+            onClick={handleMunch}
+            className="lg:w-auto bg-red-600 hover:bg-red-700 text-white px-10 h-[58px] lg:h-[68px] rounded-xl font-black uppercase tracking-[0.2em] text-xs transition-all transform hover:scale-[1.02] active:scale-95 shadow-xl shadow-red-600/20 whitespace-nowrap"
+          >
+            Serve Curated Feed
+          </button>
         </div>
-        
-        <button 
-          onClick={handleMunch}
-          className="w-full sm:w-auto bg-white text-black hover:bg-red-600 hover:text-white px-16 py-6 rounded-2xl font-black uppercase tracking-[0.2em] text-sm transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
-        >
-          Serve Curated Feed
-        </button>
+
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/5">
+          <div className="flex items-center space-x-3 text-zinc-500">
+            <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></div>
+            <span className="text-[9px] font-black uppercase tracking-widest">Global Discovery Enabled</span>
+          </div>
+          <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest italic">Personalizing for your ${meal || 'next meal'}</p>
+        </div>
       </div>
     </div>
   );
